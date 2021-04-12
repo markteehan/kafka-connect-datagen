@@ -34,12 +34,21 @@ public class DatagenConnectorConfig extends AbstractConfig {
   public static final String ITERATIONS_CONF = "iterations";
   private static final String ITERATIONS_DOC = "Number of messages to send from each task, "
       + "or less than 1 for unlimited";
-  public static final String SCHEMA_STRING_CONF = "schema.string";
-  private static final String SCHEMA_STRING_DOC = "The literal JSON-encoded Avro schema to use";
-  public static final String SCHEMA_FILENAME_CONF = "schema.filename";
-  private static final String SCHEMA_FILENAME_DOC = "Filename of schema to use";
+  // Value schema
+  public static final String SCHEMA_VALUE_STRING_CONF = "value.schema.string";
+  private static final String SCHEMA_VALUE_STRING_DOC =
+          "The literal JSON-encoded Avro schema to use";
+  public static final String SCHEMA_VALUE_FILENAME_CONF = "value.schema.filename";
+  private static final String SCHEMA_VALUE_FILENAME_DOC = "Filename of value schema to use";
+  // Key schema
+  public static final String SCHEMA_KEY_STRING_CONF = "key.schema.string";
+  private static final String SCHEMA_KEY_STRING_DOC = "The literal JSON-encoded Avro schema to use";
+  public static final String SCHEMA_KEY_FILENAME_CONF = "key.schema.filename";
+  private static final String SCHEMA_KEY_FILENAME_DOC = "Filename of key schema to use";
+
   public static final String SCHEMA_KEYFIELD_CONF = "schema.keyfield";
   private static final String SCHEMA_KEYFIELD_DOC = "Name of field to use as the message key";
+
   public static final String QUICKSTART_CONF = "quickstart";
   private static final String QUICKSTART_DOC = "Name of quickstart to use";
   public static final String RANDOM_SEED_CONF = "random.seed";
@@ -60,8 +69,12 @@ public class DatagenConnectorConfig extends AbstractConfig {
         .define(KAFKA_TOPIC_CONF, Type.STRING, Importance.HIGH, KAFKA_TOPIC_DOC)
         .define(MAXINTERVAL_CONF, Type.LONG, 500L, Importance.HIGH, MAXINTERVAL_DOC)
         .define(ITERATIONS_CONF, Type.INT, -1, Importance.HIGH, ITERATIONS_DOC)
-        .define(SCHEMA_STRING_CONF, Type.STRING, "", Importance.HIGH, SCHEMA_STRING_DOC)
-        .define(SCHEMA_FILENAME_CONF, Type.STRING, "", Importance.HIGH, SCHEMA_FILENAME_DOC)
+        .define(SCHEMA_VALUE_STRING_CONF, Type.STRING, "", Importance.HIGH, SCHEMA_VALUE_STRING_DOC)
+        .define(SCHEMA_KEY_STRING_CONF, Type.STRING, "", Importance.HIGH, SCHEMA_KEY_STRING_DOC)
+        .define(SCHEMA_VALUE_FILENAME_CONF, Type.STRING, "",
+                Importance.HIGH, SCHEMA_VALUE_FILENAME_DOC)
+        .define(SCHEMA_KEY_FILENAME_CONF, Type.STRING, "",
+                    Importance.HIGH, SCHEMA_KEY_FILENAME_DOC)
         .define(SCHEMA_KEYFIELD_CONF, Type.STRING, "", Importance.HIGH, SCHEMA_KEYFIELD_DOC)
         .define(QUICKSTART_CONF, Type.STRING, "", Importance.HIGH, QUICKSTART_DOC)
         .define(RANDOM_SEED_CONF, Type.LONG, null, Importance.LOW, RANDOM_SEED_DOC);
@@ -79,8 +92,12 @@ public class DatagenConnectorConfig extends AbstractConfig {
     return this.getInt(ITERATIONS_CONF);
   }
 
-  public String getSchemaFilename() {
-    return this.getString(SCHEMA_FILENAME_CONF);
+  public String getSchemaValueFilename() {
+    return this.getString(SCHEMA_VALUE_FILENAME_CONF);
+  }
+
+  public String getSchemaKeyFilename() {
+    return this.getString(SCHEMA_KEY_FILENAME_CONF);
   }
 
   public String getSchemaKeyfield() {
@@ -95,16 +112,19 @@ public class DatagenConnectorConfig extends AbstractConfig {
     return this.getLong(RANDOM_SEED_CONF);
   }
 
-  public String getSchemaString() {
-    return this.getString(SCHEMA_STRING_CONF);
+  public String getSchemaValueString() {
+    return this.getString(SCHEMA_VALUE_STRING_CONF);
+  }
+
+  public String getSchemaKeyString() {
+    return this.getString(SCHEMA_KEY_STRING_CONF);
   }
 
   public static List<String> schemaSourceKeys() {
-    return ImmutableList.of(SCHEMA_STRING_CONF, SCHEMA_FILENAME_CONF, QUICKSTART_CONF);
+    return ImmutableList.of(SCHEMA_VALUE_STRING_CONF, SCHEMA_VALUE_FILENAME_CONF, QUICKSTART_CONF);
   }
 
   public static boolean isExplicitlySetSchemaSource(String key, Object value) {
     return schemaSourceKeys().contains(key) && !("".equals(value));
   }
 }
-

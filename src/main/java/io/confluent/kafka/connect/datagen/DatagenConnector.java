@@ -38,9 +38,10 @@ public class DatagenConnector extends SourceConnector {
   private DatagenConnectorConfig config;
   private Map<String, String> props;
 
+
   @VisibleForTesting
   static final String SCHEMA_SOURCE_ERR =
-      "Must set exactly one of " + String.join(", ", DatagenConnectorConfig.schemaSourceKeys());
+          "Must set exactly one of " + String.join(", ", DatagenConnectorConfig.schemaSourceKeys());
 
   @Override
   public String version() {
@@ -54,8 +55,8 @@ public class DatagenConnector extends SourceConnector {
       config = new DatagenConnectorConfig(props);
     } catch (ConfigException e) {
       throw new ConfigException(
-          "Datagen connector could not start because of an error in the configuration: ",
-          e
+              "Datagen connector could not start because of an error in the configuration: ",
+              e
       );
     }
   }
@@ -94,8 +95,8 @@ public class DatagenConnector extends SourceConnector {
 
   private void validateSchemaSource(Config config) {
     List<ConfigValue> schemaSources = config.configValues().stream()
-        .filter(v -> DatagenConnectorConfig.isExplicitlySetSchemaSource(v.name(), v.value()))
-        .collect(Collectors.toList());
+            .filter(v -> DatagenConnectorConfig.isExplicitlySetSchemaSource(v.name(), v.value()))
+            .collect(Collectors.toList());
     if (schemaSources.size() > 1) {
       for (ConfigValue v : schemaSources) {
         v.addErrorMessage(SCHEMA_SOURCE_ERR);
@@ -103,8 +104,9 @@ public class DatagenConnector extends SourceConnector {
     }
     if (schemaSources.size() == 0) {
       config.configValues().stream()
-          .filter(v -> DatagenConnectorConfig.schemaSourceKeys().contains(v.name()))
-          .forEach(v -> v.addErrorMessage(SCHEMA_SOURCE_ERR));
+              .filter(v -> DatagenConnectorConfig.schemaSourceKeys().contains(v.name()))
+              .forEach(v -> v.addErrorMessage(SCHEMA_SOURCE_ERR));
     }
   }
+  // need to ValidateKeyProperties here (not implemented)
 }

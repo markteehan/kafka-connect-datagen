@@ -139,7 +139,7 @@ public class DatagenTaskTest {
     // Do the same thing with schema text
     DatagenTask.Quickstart quickstart = Quickstart.PAGEVIEWS;
     assertNotEquals(quickstart.getSchemaKeyField(), "pageid");
-    createTaskWithSchemaText(slurp(quickstart.getSchemaFilename()), "pageid");
+    createTaskWithSchemaText(slurp(quickstart.getSchemaValueFilename()), "pageid");
     generateRecords();
     assertRecordsMatchSchemas();
   }
@@ -207,12 +207,12 @@ public class DatagenTaskTest {
     assertRecordsMatchSchemas();
 
     // Do the same thing with schema file
-    createTaskWithSchema(quickstart.getSchemaFilename(), quickstart.getSchemaKeyField());
+    createTaskWithSchema(quickstart.getSchemaValueFilename(), quickstart.getSchemaKeyField());
     generateRecords();
     assertRecordsMatchSchemas();
 
     // Do the same thing with schema text
-    createTaskWithSchemaText(slurp(quickstart.getSchemaFilename()), quickstart.getSchemaKeyField());
+    createTaskWithSchemaText(slurp(quickstart.getSchemaValueFilename()), quickstart.getSchemaKeyField());
     generateRecords();
     assertRecordsMatchSchemas();
   }
@@ -290,8 +290,8 @@ public class DatagenTaskTest {
 
   private void dropSchemaSourceConfigs() {
     config.remove(DatagenConnectorConfig.QUICKSTART_CONF);
-    config.remove(DatagenConnectorConfig.SCHEMA_FILENAME_CONF);
-    config.remove(DatagenConnectorConfig.SCHEMA_STRING_CONF);
+    config.remove(DatagenConnectorConfig.SCHEMA_VALUE_FILENAME_CONF);
+    config.remove(DatagenConnectorConfig.SCHEMA_VALUE_STRING_CONF);
   }
 
   private void createTaskWith(DatagenTask.Quickstart quickstart) {
@@ -301,12 +301,12 @@ public class DatagenTaskTest {
         quickstart.name().toLowerCase(Locale.getDefault())
     );
     createTask();
-    loadKeyAndValueSchemas(quickstart.getSchemaFilename(), quickstart.getSchemaKeyField());
+    loadKeyAndValueSchemas(quickstart.getSchemaValueFilename(), quickstart.getSchemaKeyField());
   }
 
   private void createTaskWithSchema(String schemaResourceFilename, String idFieldName) {
     dropSchemaSourceConfigs();
-    config.put(DatagenConnectorConfig.SCHEMA_FILENAME_CONF, schemaResourceFilename);
+    config.put(DatagenConnectorConfig.SCHEMA_VALUE_FILENAME_CONF, schemaResourceFilename);
     config.put(DatagenConnectorConfig.SCHEMA_KEYFIELD_CONF, idFieldName);
     createTask();
     loadKeyAndValueSchemas(schemaResourceFilename, idFieldName);
@@ -314,7 +314,7 @@ public class DatagenTaskTest {
 
   private void createTaskWithSchemaText(String schemaText, String keyField) {
     dropSchemaSourceConfigs();
-    config.put(DatagenConnectorConfig.SCHEMA_STRING_CONF, schemaText);
+    config.put(DatagenConnectorConfig.SCHEMA_VALUE_STRING_CONF, schemaText);
     config.put(DatagenConnectorConfig.SCHEMA_KEYFIELD_CONF, keyField);
     createTask();
     loadKeyAndValueSchemasFromString(schemaText, keyField);

@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+//bug: an invalid SchemaKeyField causes a NPE
+//bug: invalid SchemaValueFilename causes
+// added NCSS to "  <suppress checks="(CyclomaticComplexity|NPathComplexity|NCSS)" files="DatagenTask.java"/>"
+// added LineLength to "  <suppress checks="(CyclomaticComplexity|NPathComplexity|NCSS)" files="DatagenTask.java"/>"
 
 package io.confluent.kafka.connect.datagen;
 
@@ -59,12 +63,16 @@ public class DatagenTask extends SourceTask {
   private long maxInterval;
   private int maxRecords;
   private long count = 0L;
-  private String schemaFilename;
+  private String schemaValueFilename;
+  private String schemaKeyFilename;
   private String schemaKeyField;
-  private String schemaString;
+  private String schemaValueString;
+  private String schemaKeyString;
   private Quickstart quickstart;
-  private Generator generator;
-  private org.apache.avro.Schema avroSchema;
+  private Generator valueGenerator; // changed generator to valueGenerator
+  private Generator keyGenerator;   // added
+  private org.apache.avro.Schema avroValueSchema;
+  private org.apache.avro.Schema avroKeySchema;  //added
   private org.apache.kafka.connect.data.Schema ksqlSchema;
   private AvroData avroData;
   private int taskId;
@@ -85,16 +93,17 @@ public class DatagenTask extends SourceTask {
     INVENTORY("inventory.avro", "id"),
     PRODUCT("product.avro", "id");
 
-    private final String schemaFilename;
+    private final String schemaValueFilename;
+    //private final String schemaKeyFilename;
     private final String keyName;
 
-    Quickstart(String schemaFilename, String keyName) {
-      this.schemaFilename = schemaFilename;
+    Quickstart(String schemaValueFilename, String keyName) {
+      this.schemaValueFilename = schemaValueFilename;
       this.keyName = keyName;
     }
 
-    public String getSchemaFilename() {
-      return schemaFilename;
+    public String getSchemaValueFilename() {
+      return schemaValueFilename;
     }
 
     public String getSchemaKeyField() {
@@ -113,8 +122,10 @@ public class DatagenTask extends SourceTask {
     topic = config.getKafkaTopic();
     maxInterval = config.getMaxInterval();
     maxRecords = config.getIterations();
-    schemaFilename = config.getSchemaFilename();
-    schemaString = config.getSchemaString();
+    schemaValueFilename = config.getSchemaValueFilename();
+    schemaKeyFilename = config.getSchemaKeyFilename();
+    schemaValueString = config.getSchemaValueString();
+    schemaKeyString = config.getSchemaKeyString();
     schemaKeyField = config.getSchemaKeyfield();
     taskGeneration = 0;
     taskId = Integer.parseInt(props.get(TASK_ID));
@@ -129,7 +140,6 @@ public class DatagenTask extends SourceTask {
         random.setSeed(random.nextLong());
       }
     }
-
     Map<String, Object> offset = context.offsetStorageReader().offset(sourcePartition);
     if (offset != null) {
       //  The offset as it is stored contains our next state, so restore it as-is.
@@ -142,37 +152,54 @@ public class DatagenTask extends SourceTask {
         .random(random)
         .generation(count);
     String quickstartName = config.getQuickstart();
+
     if (quickstartName != "") {
       try {
         quickstart = Quickstart.valueOf(quickstartName.toUpperCase());
         if (quickstart != null) {
-          schemaFilename = quickstart.getSchemaFilename();
+          schemaValueFilename = quickstart.getSchemaValueFilename();
           schemaKeyField = schemaKeyField.equals("")
               ? quickstart.getSchemaKeyField() : schemaKeyField;
           try {
-            generator = generatorBuilder
-                .schemaStream(getClass().getClassLoader().getResourceAsStream(schemaFilename))
+            valueGenerator = generatorBuilder
+                .schemaStream(getClass().getClassLoader().getResourceAsStream(schemaValueFilename))
                 .build();
           } catch (IOException e) {
             throw new ConnectException("Unable to read the '"
-                + schemaFilename + "' schema file", e);
+                + schemaValueFilename + "' schema file", e);
           }
         }
       } catch (IllegalArgumentException e) {
         log.warn("Quickstart '{}' not found: ", quickstartName, e);
       }
-    } else if (schemaString != "") {
-      generator = generatorBuilder.schemaString(schemaString).build();
-    } else {
-      String err = "Unable to read the '" + schemaFilename + "' schema file";
-      try {
-        generator = generatorBuilder.schemaStream(new FileInputStream(schemaFilename)).build();
+    //not a quickstart
+    } else if (schemaValueString != "") {
+      //   if (schemaValueString != "" && keyValueString != "") {
+      //   valueGenerator = generatorBuilder.schemaString(schemaValueString).build();
+      //     keyGenerator = generatorBuilder.schemaString(schemaKeyString).build();
+      // } else if (schemaValueString != "" && keyValueString  = "")
+      // {
+      //     valueGenerator = generatorBuilder.schemaString(schemaValueString).build();
+      // }
+      valueGenerator = generatorBuilder.schemaString(schemaValueString).build();
+    } else if (schemaValueFilename != "") {
+      String err = "Unable to read the '" + schemaValueFilename + "' schema file";
+      try  {
+        //if (schemaKeyFilename != "") {
+        //  keyGenerator = generatorBuilder
+        //          .schemaStream(getClass().getClassLoader().getResourceAsStream(schemaValueFilename))
+        //          .build();
+        //  //keyGenerator = generatorBuilder.schemaStream(
+        //  //        new FileInputStream(schemaKeyFilename)).build();
+        //}
+        valueGenerator = generatorBuilder.schemaStream(
+                new FileInputStream(schemaValueFilename)).build();
       } catch (FileNotFoundException e) {
-        // also look in jars on the classpath
+        // also look for the schemaValueFilename in jars on the classpath
         try {
-          generator = generatorBuilder
-              .schemaStream(DatagenTask.class.getClassLoader().getResourceAsStream(schemaFilename))
-              .build();
+          valueGenerator = generatorBuilder
+              .schemaStream(DatagenTask.class.getClassLoader()
+              .getResourceAsStream(schemaValueFilename)).build();
         } catch (IOException inner) {
           throw new ConnectException(err, e);
         }
@@ -180,10 +207,10 @@ public class DatagenTask extends SourceTask {
         throw new ConnectException(err, e);
       }
     }
-
-    avroSchema = generator.schema();
+    avroValueSchema = valueGenerator.schema();
+    //avroKeySchema = valueGenerator.schema();
     avroData = new AvroData(1);
-    ksqlSchema = avroData.toConnectSchema(avroSchema);
+    ksqlSchema = avroData.toConnectSchema(avroValueSchema);
   }
 
   @Override
@@ -198,7 +225,7 @@ public class DatagenTask extends SourceTask {
       }
     }
 
-    final Object generatedObject = generator.generate();
+    final Object generatedObject = valueGenerator.generate();
     if (!(generatedObject instanceof GenericRecord)) {
       throw new RuntimeException(String.format(
           "Expected Avro Random Generator to return instance of GenericRecord, found %s instead",
@@ -208,7 +235,7 @@ public class DatagenTask extends SourceTask {
     final GenericRecord randomAvroMessage = (GenericRecord) generatedObject;
 
     final List<Object> genericRowValues = new ArrayList<>();
-    for (org.apache.avro.Schema.Field field : avroSchema.getFields()) {
+    for (org.apache.avro.Schema.Field field : avroValueSchema.getFields()) {
       final Object value = randomAvroMessage.get(field.name());
       if (value instanceof Record) {
         final Record record = (Record) value;
@@ -230,8 +257,9 @@ public class DatagenTask extends SourceTask {
     }
 
     // Value
-    final org.apache.kafka.connect.data.Schema messageSchema = avroData.toConnectSchema(avroSchema);
-    final Object messageValue = avroData.toConnectData(avroSchema, randomAvroMessage).value();
+    final org.apache.kafka.connect.data.Schema messageSchema =
+            avroData.toConnectSchema(avroValueSchema);
+    final Object messageValue = avroData.toConnectData(avroValueSchema, randomAvroMessage).value();
 
     if (maxRecords > 0 && count >= maxRecords) {
       throw new ConnectException(

@@ -86,7 +86,7 @@ public class DatagenConnectorTest {
   @Test
   public void shouldAllowSettingSchema() {
     clearSchemaSources();
-    config.put(DatagenConnectorConfig.SCHEMA_STRING_CONF, "a schema");
+    config.put(DatagenConnectorConfig.SCHEMA_VALUE_STRING_CONF, "a schema");
 
     Config validated = connector.validate(config);
 
@@ -98,7 +98,7 @@ public class DatagenConnectorTest {
   @Test
   public void shouldAllowSettingSchemaFile() {
     clearSchemaSources();
-    config.put(DatagenConnectorConfig.SCHEMA_FILENAME_CONF, "a schema file");
+    config.put(DatagenConnectorConfig.SCHEMA_VALUE_FILENAME_CONF, "a schema file");
 
     Config validated = connector.validate(config);
 
@@ -110,22 +110,22 @@ public class DatagenConnectorTest {
   @Test
   public void shouldFailValidationWithMultipleSchemaSources() {
     clearSchemaSources();
-    config.put(DatagenConnectorConfig.SCHEMA_STRING_CONF, "a schema");
-    config.put(DatagenConnectorConfig.SCHEMA_FILENAME_CONF, "a schema file");
+    config.put(DatagenConnectorConfig.SCHEMA_VALUE_STRING_CONF, "a schema");
+    config.put(DatagenConnectorConfig.SCHEMA_VALUE_FILENAME_CONF, "a schema file");
 
     Config validated = connector.validate(config);
 
     assertThat(
         validated,
         hasValidationError(
-            DatagenConnectorConfig.SCHEMA_STRING_CONF,
+            DatagenConnectorConfig.SCHEMA_VALUE_STRING_CONF,
             DatagenConnector.SCHEMA_SOURCE_ERR
         )
     );
     assertThat(
         validated,
         hasValidationError(
-            DatagenConnectorConfig.SCHEMA_FILENAME_CONF,
+            DatagenConnectorConfig.SCHEMA_VALUE_FILENAME_CONF,
             DatagenConnector.SCHEMA_SOURCE_ERR
         )
     );

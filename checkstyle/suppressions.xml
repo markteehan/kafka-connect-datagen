@@ -6,5 +6,5 @@
 
 <suppressions>
 <suppress checks="ClassDataAbstractionCoupling" files="(DatagenTask|AvroMessageReader|RestService|Errors|SchemaRegistryRestApplication|KafkaSchemaRegistry|KafkaStore|AvroData|KafkaGroupMasterElector).java"/>
-  <suppress checks="(CyclomaticComplexity|NPathComplexity)" files="DatagenTask.java"/>
+  <suppress checks="(CyclomaticComplexity|NPathComplexity|NCSS|LineLength)" files="DatagenTask.java"/>
 </suppressions>
